@@ -264,7 +264,7 @@
         <div class="section">
           <div class="sec-head"><span class="sec-num">3</span><span class="sec-title">Paket &amp; Layanan</span></div>
           <div class="grid">
-            <div class="field">
+            <div class="field" id="skemaField">
               <label for="skema">Skema Layanan</label>
               <select id="skema" name="skema">
                 <option selected>Profit Sharing</option>
@@ -407,6 +407,30 @@
       ? 'Akun <strong>Demo</strong> akan <strong>langsung aktif otomatis</strong> setelah daftar.'
       : (real ? 'Akun <strong>Real</strong> akan <strong>diverifikasi admin</strong> terlebih dahulu sebelum aktif.'
               : 'Akun <strong>Demo</strong> langsung aktif otomatis. Akun <strong>Real</strong> diverifikasi admin terlebih dahulu.');
+
+    // Akun Demo: sembunyikan Skema Layanan & note Profit Sharing (tidak relevan)
+    var isDemo = (jenisEl.value === 'Demo');
+    var skemaField = document.getElementById('skemaField');
+    var psInfoEl = document.getElementById('psInfo');
+    var psFieldEl = document.getElementById('psharing');
+    var skemaSel = document.getElementById('skema');
+    if (skemaField) skemaField.style.display = isDemo ? 'none' : '';
+    if (isDemo) {
+      if (psInfoEl) psInfoEl.style.display = 'none';
+      if (psFieldEl) psFieldEl.value = '';
+      if (skemaSel) skemaSel.value = '';        // demo tidak pakai skema
+    } else {
+      if (skemaSel) skemaSel.value = 'Profit Sharing';
+      // munculkan kembali note profit sharing jika masa sudah dipilih
+      var mEl = document.getElementById('masa');
+      var map = { '1 Bulan':'30%', '3 Bulan':'20%', '6 Bulan':'10%', '12 Bulan':'5%' };
+      var pct = mEl ? (map[mEl.value] || '') : '';
+      if (pct && psInfoEl) {
+        psInfoEl.textContent = 'Profit Sharing untuk ' + mEl.value + ': ' + pct + ' dari profit — ditagih tiap akhir bulan (jika profit).';
+        psInfoEl.style.display = 'block';
+        if (psFieldEl) psFieldEl.value = pct;
+      }
+    }
   }
   if (jenisEl) jenisEl.addEventListener('change', updateJenis);
 
@@ -423,8 +447,9 @@
   var psField = document.getElementById('psharing');
   if (masaEl) {
     masaEl.addEventListener('change', function(){
+      var isDemo = (document.getElementById('jenis').value === 'Demo');
       var pct = psMap[masaEl.value] || '';
-      if (pct) {
+      if (pct && !isDemo) {
         psInfo.textContent = 'Profit Sharing untuk ' + masaEl.value + ': ' + pct + ' dari profit — ditagih tiap akhir bulan (jika profit).';
         psInfo.style.display = 'block';
         if (psField) psField.value = pct;
