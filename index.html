@@ -77,6 +77,7 @@
   .disc{
     background:var(--navy-950); border:1px solid var(--field-line); border-radius:12px;
     padding:14px 16px; max-height:210px; overflow-y:auto; font-size:12.5px; color:var(--ink-dim); line-height:1.65;
+    text-align:justify;
   }
   .disc strong{color:var(--gold-soft);}
   .disc p{margin:0 0 10px;} .disc p:last-child{margin:0;}
@@ -165,7 +166,7 @@
       </svg>
       <p class="brand">Expert Advisor · XAUUSD</p>
       <h1>Formulir Pendaftaran EA Apocalypto</h1>
-      <p class="sub">Lengkapi data di bawah ini untuk mendaftarkan lisensi EA Apocalypto Anda. Data akan langsung tercatat dan tim kami akan menghubungi Anda untuk proses aktivasi.</p>
+      <p class="sub">Lengkapi data di bawah ini untuk Aktivasi EA Apocalypto.</p>
     </div>
 
     <div class="body">
@@ -175,9 +176,9 @@
           <div class="sec-head"><span class="sec-num">1</span><span class="sec-title">Data Pribadi</span></div>
           <div class="grid">
             <div class="field full">
-              <label for="nama">Nama Lengkap <span class="req">*</span></label>
-              <input id="nama" name="nama" type="text" placeholder="Nama sesuai identitas" required>
-              <div class="errmsg" data-for="nama">Nama lengkap wajib diisi.</div>
+              <label for="nama">Nama Panggilan <span class="req">*</span></label>
+              <input id="nama" name="nama" type="text" placeholder="Nama panggilan Anda" required>
+              <div class="errmsg" data-for="nama">Nama panggilan wajib diisi.</div>
             </div>
             <div class="field">
               <label for="wa">Nomor WhatsApp <span class="req">*</span></label>
@@ -185,49 +186,35 @@
               <div class="errmsg" data-for="wa">Nomor WhatsApp wajib diisi.</div>
             </div>
             <div class="field">
-              <label for="email">Email <span style="color:#6f7fa0;font-weight:500">(opsional)</span></label>
-              <input id="email" name="email" type="email" placeholder="nama@email.com">
+              <label for="email">Email <span class="req">*</span></label>
+              <input id="email" name="email" type="email" placeholder="nama@email.com" required>
+              <div class="errmsg" data-for="email">Email wajib diisi dengan format yang benar.</div>
             </div>
           </div>
         </div>
 
         <div class="section">
-          <div class="sec-head"><span class="sec-num">2</span><span class="sec-title">Data Akun Trading (untuk lisensi)</span></div>
+          <div class="sec-head"><span class="sec-num">2</span><span class="sec-title">Data Akun Trading (untuk Aktivasi)</span></div>
           <div class="grid">
-            <div class="field">
-              <label for="broker">Nama Broker <span class="req">*</span></label>
-              <input id="broker" name="broker" type="text" placeholder="Contoh: Exness, IC Markets" required>
-              <div class="errmsg" data-for="broker">Nama broker wajib diisi.</div>
-            </div>
             <div class="field">
               <label for="login">Nomor Akun / Login MT5 <span class="req">*</span></label>
               <input id="login" name="login" type="text" inputmode="numeric" placeholder="Contoh: 12345678" required>
               <div class="errmsg" data-for="login">Nomor akun wajib diisi.</div>
+            </div>
+            <div class="field">
+              <label for="invpass">Password Investor / Read-Only <span class="req">*</span></label>
+              <input id="invpass" name="invpass" type="text" placeholder="Password read-only akun MT5" required>
+              <div class="errmsg" data-for="invpass">Password Investor / Read-Only wajib diisi.</div>
             </div>
             <div class="field full">
               <label for="server">Server Broker <span class="req">*</span></label>
               <input id="server" name="server" type="text" placeholder="Contoh: Exness-MT5Real8" required>
               <div class="errmsg" data-for="server">Server broker wajib diisi.</div>
             </div>
-            <div class="field">
-              <label for="tipe">Tipe Akun</label>
-              <select id="tipe" name="tipe">
-                <option value="">— Pilih tipe akun —</option>
-                <option>Standard</option>
-                <option>Cent</option>
-                <option>Pro / Raw / ECN</option>
-                <option>Zero</option>
-                <option>Lainnya</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="modal">Perkiraan Modal (opsional)</label>
-              <input id="modal" name="modal" type="text" placeholder="Contoh: $500 / $1000">
-            </div>
           </div>
           <div class="note">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 8.5 9 10 5.2-1.5 9-5 9-10V6z"/><path d="m9 12 2 2 4-4"/></svg>
-            <span><strong>Jangan pernah mengirim password akun trading Anda.</strong> Lisensi hanya membutuhkan nomor login, server, dan broker. Password (master maupun investor) tidak diperlukan dan tidak boleh dibagikan kepada siapa pun.</span>
+            <span><strong>Jangan pernah memberikan password trading dan wallet Anda</strong> (kecuali sharing VPS). Password Investor / Read-Only hanya untuk memastikan bahwa EA telah berjalan di akun Anda.</span>
           </div>
         </div>
 
@@ -237,11 +224,9 @@
             <div class="field">
               <label for="skema">Skema Layanan</label>
               <select id="skema" name="skema">
-                <option value="">— Pilih skema —</option>
-                <option>Beli Lisensi</option>
-                <option>Profit Sharing</option>
+                <option selected>Profit Sharing</option>
               </select>
-              <div class="hint">Detail masing-masing skema akan dijelaskan admin saat konfirmasi.</div>
+              <div class="hint">Saat ini kami hanya menyediakan layanan <strong>Profit Sharing</strong> yang ditagihkan setiap akhir bulan (jika profit saja).</div>
             </div>
             <div class="field">
               <label for="masa">Masa Berlaku Lisensi</label>
@@ -251,17 +236,19 @@
                 <option>3 Bulan</option>
                 <option>6 Bulan</option>
                 <option>12 Bulan</option>
-                <option>Lifetime</option>
               </select>
+              <div id="psInfo" style="display:none; margin-top:7px; padding:8px 12px; border-radius:8px; background:rgba(230,199,102,0.12); color:#e6c766; font-weight:700; font-size:12.5px;"></div>
+              <input type="hidden" id="psharing" name="psharing">
             </div>
             <div class="field full">
               <label for="vps">Pilihan VPS</label>
               <select id="vps" name="vps">
                 <option value="">— Pilih opsi VPS —</option>
-                <option>VPS Sendiri</option>
-                <option>VPS Sharing</option>
+                <option>Private VPS</option>
+                <option>Sharing VPS</option>
               </select>
               <div class="hint">VPS diperlukan agar EA berjalan 24 jam tanpa perlu menyalakan komputer sendiri.</div>
+              <div id="vpsInfo" style="display:none; margin-top:7px; padding:8px 12px; border-radius:8px; background:rgba(230,199,102,0.12); color:#e6c766; font-weight:600; font-size:12.5px;">Untuk <strong>Sharing VPS</strong>, admin akan menghubungi Anda untuk melakukan setup. Anda akan dikenakan biaya tambahan sebesar <strong>Rp 25.000 / bulan</strong>.</div>
             </div>
           </div>
         </div>
@@ -274,6 +261,7 @@
             <p><strong>Tanpa Jaminan.</strong> Kinerja pada masa lalu maupun hasil backtest tidak menjamin hasil di masa depan. Penyedia tidak bertanggung jawab atas kerugian yang timbul dari penggunaan EA.</p>
             <p><strong>Keputusan Mandiri.</strong> Segala keputusan penggunaan EA, besaran lot, dan pengaturan risiko sepenuhnya menjadi tanggung jawab pengguna. Gunakan hanya dana yang Anda siap tanggung risikonya.</p>
             <p><strong>Lisensi.</strong> Lisensi terikat pada nomor akun yang didaftarkan dan tidak dapat dipindahtangankan tanpa persetujuan penyedia.</p>
+            <p><strong>Profit Sharing.</strong> User menyetujui membayar profit sharing setiap akhir bulan sesuai pilihan pada saat aktivasi, selambat-lambatnya 3 hari dari tanggal penagihan. Admin berhak memutus akses layanan secara sepihak apabila user tidak melakukan pembayaran.</p>
           </div>
           <label class="agree">
             <input type="checkbox" id="setuju" name="setuju" required>
@@ -310,11 +298,11 @@
   // ======================= KONFIGURASI =======================
   // Tempel URL Web App Google Apps Script Anda di antara tanda kutip di bawah.
   // Cara mendapatkannya ada di panduan (langkah Deploy Apps Script).
-  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxaVYQ97PWg1wYGnW51vDcKbBNL7WT12V9H-db5qUk7RNjFBDdiDLaQi7KDWosb28yI-A/exec";
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxu4yPuLGPtsp0ZRkqw3b0s8-vMVNUyHD2YUanDYHidWP--J79jHZvJr1xpmONEf9Q/exec";
   // ===========================================================
 
   var form = document.getElementById('regForm');
-  var required = ['nama','wa','broker','login','server'];
+  var required = ['nama','wa','email','login','invpass','server'];
   var btn = document.getElementById('btn');
   var spin = document.getElementById('spin');
   var btntext = document.getElementById('btntext');
@@ -338,6 +326,34 @@
     btntext.textContent = on ? 'Mengirim...' : 'Kirim Pendaftaran';
   }
 
+  // Profit sharing muncul saat memilih masa berlaku
+  var psMap = { '1 Bulan':'30%', '3 Bulan':'20%', '6 Bulan':'10%', '12 Bulan':'5%' };
+  var masaEl = document.getElementById('masa');
+  var psInfo = document.getElementById('psInfo');
+  var psField = document.getElementById('psharing');
+  if (masaEl) {
+    masaEl.addEventListener('change', function(){
+      var pct = psMap[masaEl.value] || '';
+      if (pct) {
+        psInfo.textContent = 'Profit Sharing untuk ' + masaEl.value + ': ' + pct + ' dari profit — ditagih tiap akhir bulan (jika profit).';
+        psInfo.style.display = 'block';
+        if (psField) psField.value = pct;
+      } else {
+        psInfo.style.display = 'none';
+        if (psField) psField.value = '';
+      }
+    });
+  }
+
+  // Keterangan biaya untuk Sharing VPS
+  var vpsEl = document.getElementById('vps');
+  var vpsInfo = document.getElementById('vpsInfo');
+  if (vpsEl) {
+    vpsEl.addEventListener('change', function(){
+      vpsInfo.style.display = (vpsEl.value === 'Sharing VPS') ? 'block' : 'none';
+    });
+  }
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
     var ok = true, firstBad = null;
@@ -354,7 +370,7 @@
     }
 
     var data = new FormData();
-    ['nama','wa','email','broker','login','server','tipe','modal','skema','masa','vps'].forEach(function(n){
+    ['nama','wa','email','login','invpass','server','skema','masa','vps','psharing'].forEach(function(n){
       data.append(n, (fieldEl(n).value||'').trim());
     });
     data.append('setuju', fieldEl('setuju').checked ? 'YA' : 'TIDAK');
