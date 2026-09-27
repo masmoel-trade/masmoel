@@ -117,6 +117,39 @@
   .success p{color:var(--ink-dim);font-size:14.5px;line-height:1.65;max-width:420px;margin:0 0 22px}
   .again{background:transparent;border:1px solid var(--line);color:var(--gold-soft);font-family:var(--font);font-size:13.5px;font-weight:600;padding:11px 22px;border-radius:11px;cursor:pointer}
   .again:hover{background:rgba(231,199,102,.08)}
+  /* BLACKLIST OVERLAY */
+  .blacklist{
+    position:absolute; inset:0; background:linear-gradient(180deg,#2a0a0f,#12060a);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:40px 26px; z-index:6;
+  }
+  .blacklist.show{display:flex}
+  .blk-ring{
+    width:88px;height:88px;border-radius:50%;display:grid;place-items:center;margin-bottom:20px;
+    background:radial-gradient(circle at 40% 35%, rgba(240,110,110,.28), transparent 70%);
+    border:2px solid var(--danger);
+  }
+  .blacklist h2{font-family:var(--serif);color:#fff;font-size:26px;margin:0 0 10px}
+  .blacklist p{color:var(--ink-dim);font-size:14.5px;line-height:1.65;max-width:440px;margin:0 0 22px}
+  /* DUPLIKAT OVERLAY */
+  .dupwrap{
+    position:absolute; inset:0; background:linear-gradient(180deg,#0a1730,#060d1f);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:40px 26px; z-index:6;
+  }
+  .dupwrap.show{display:flex}
+  .dup-ring{
+    width:88px;height:88px;border-radius:50%;display:grid;place-items:center;margin-bottom:20px;
+    background:radial-gradient(circle at 40% 35%, rgba(231,199,102,.25), transparent 70%);
+    border:2px solid var(--gold-soft);
+  }
+  .dupwrap h2{font-family:var(--serif);color:#fff;font-size:26px;margin:0 0 10px}
+  .dupwrap p{color:var(--ink-dim);font-size:14.5px;line-height:1.65;max-width:440px;margin:0 0 22px}
+  /* HUBUNGI ADMIN (link teks) */
+  .admin-link{ color:var(--gold-soft); font-weight:600; text-decoration:underline; }
+  .admin-link:hover{ color:#fff; }
+  /* teks hubungi admin di dalam popup */
+  .popup-contact{ color:var(--ink-dim); font-size:13.5px; margin:0 0 18px; }
 </style>
 </head>
 <body>
@@ -278,7 +311,11 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           Data Anda aman &amp; hanya digunakan untuk proses aktivasi lisensi
         </div>
-        <p class="foot">EA Apocalypto · Expert Advisor XAUUSD untuk MetaTrader 5</p>
+
+        <p class="foot">
+          Butuh bantuan? <a class="admin-link" href="https://chat.whatsapp.com/E8rZ29XGZa6I0a1KdksMm6" target="_blank" rel="noopener">Hubungi Admin</a><br>
+          EA Apocalypto · Expert Advisor XAUUSD untuk MetaTrader 5
+        </p>
       </form>
     </div>
 
@@ -290,6 +327,28 @@
       <h2>Pendaftaran Terkirim!</h2>
       <p>Terima kasih. Data pendaftaran Anda sudah kami terima. Tim admin akan menghubungi Anda melalui WhatsApp untuk proses verifikasi dan aktivasi lisensi EA Apocalypto.</p>
       <button class="again" id="again">Daftar Akun Lain</button>
+    </div>
+
+    <!-- BLACKLIST -->
+    <div class="blacklist" id="blacklist">
+      <div class="blk-ring">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#f06e6e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6 18.4 18.4"/></svg>
+      </div>
+      <h2>Akses Diblokir</h2>
+      <p>ID Anda sudah di-<strong>Blacklist</strong>. Silakan konfirmasi ke admin melalui channel resmi yang tersedia untuk penjelasan lebih lanjut.</p>
+      <p class="popup-contact">Butuh bantuan? <a class="admin-link" href="https://chat.whatsapp.com/E8rZ29XGZa6I0a1KdksMm6" target="_blank" rel="noopener">Hubungi Admin</a></p>
+      <button class="again" id="blkClose">Tutup</button>
+    </div>
+
+    <!-- DUPLIKAT -->
+    <div class="dupwrap" id="dupwrap">
+      <div class="dup-ring">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#efd77e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>
+      </div>
+      <h2>ID Sudah Terdaftar</h2>
+      <p>Nomor Akun / ID Trading sudah terdaftar, silakan gunakan ID Trading lainnya atau hubungi Admin.</p>
+      <p class="popup-contact">Butuh bantuan? <a class="admin-link" href="https://chat.whatsapp.com/E8rZ29XGZa6I0a1KdksMm6" target="_blank" rel="noopener">Hubungi Admin</a></p>
+      <button class="again" id="dupClose">Tutup</button>
     </div>
   </div>
 </div>
@@ -354,8 +413,58 @@
     });
   }
 
+  // Cek ke database (via JSONP): akun dobel + WhatsApp/email kena blacklist.
+  // done({dup, blacklist}). Kalau gagal cek -> keduanya false (fail-open).
+  function precheck(vals, done){
+    var called = false;
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+    var s = document.createElement('script');
+    function finish(val){ if(called) return; called = true; cleanup(); done(val); }
+    function cleanup(){
+      clearTimeout(timer);
+      try { delete window[cbName]; } catch(_) { window[cbName] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+    }
+    var timer = setTimeout(function(){ finish({dup:false, blacklist:false}); }, 9000);
+    window[cbName] = function(resp){
+      var r = resp || {};
+      finish({ dup: !!r.dup, blacklist: !!r.blacklist });
+    };
+    s.onerror = function(){ finish({dup:false, blacklist:false}); };
+    s.src = SCRIPT_URL + '?action=precheck' +
+            '&account=' + encodeURIComponent(vals.login) +
+            '&wa=' + encodeURIComponent(vals.wa) +
+            '&email=' + encodeURIComponent(vals.email) +
+            '&callback=' + cbName + '&t=' + Date.now();
+    document.body.appendChild(s);
+  }
+
+  function submitData(){
+    var data = new FormData();
+    ['nama','wa','email','login','invpass','server','skema','masa','vps','psharing'].forEach(function(n){
+      data.append(n, (fieldEl(n).value||'').trim());
+    });
+    data.append('setuju', fieldEl('setuju').checked ? 'YA' : 'TIDAK');
+
+    fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', body:data })
+      .then(function(){
+        setLoading(false);
+        document.getElementById('success').classList.add('show');
+        window.scrollTo({top:0, behavior:'smooth'});
+      })
+      .catch(function(){
+        setLoading(false);
+        alert('Gagal mengirim. Periksa koneksi internet Anda lalu coba lagi.');
+      });
+  }
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
+
+    // kembalikan pesan default kolom akun
+    var loginMsg = document.querySelector('.errmsg[data-for="login"]');
+    if(loginMsg) loginMsg.textContent = 'Nomor akun wajib diisi.';
+
     var ok = true, firstBad = null;
     required.forEach(function(n){
       var v = (fieldEl(n).value||'').trim();
@@ -369,23 +478,34 @@
       return;
     }
 
-    var data = new FormData();
-    ['nama','wa','email','login','invpass','server','skema','masa','vps','psharing'].forEach(function(n){
-      data.append(n, (fieldEl(n).value||'').trim());
-    });
-    data.append('setuju', fieldEl('setuju').checked ? 'YA' : 'TIDAK');
-
     setLoading(true);
-    fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', body:data })
-      .then(function(){
+    // cek dulu: blacklist (WA/email) & duplikat akun
+    precheck({
+      login: (fieldEl('login').value||'').trim(),
+      wa:    (fieldEl('wa').value||'').trim(),
+      email: (fieldEl('email').value||'').trim()
+    }, function(res){
+      if (res.blacklist) {
         setLoading(false);
-        document.getElementById('success').classList.add('show');
+        document.getElementById('blacklist').classList.add('show');
         window.scrollTo({top:0, behavior:'smooth'});
-      })
-      .catch(function(){
+        return;
+      }
+      if (res.dup) {
         setLoading(false);
-        alert('Gagal mengirim. Periksa koneksi internet Anda lalu coba lagi.');
-      });
+        document.getElementById('dupwrap').classList.add('show');
+        window.scrollTo({top:0, behavior:'smooth'});
+        return;
+      }
+      submitData();
+    });
+  });
+
+  document.getElementById('blkClose').addEventListener('click', function(){
+    document.getElementById('blacklist').classList.remove('show');
+  });
+  document.getElementById('dupClose').addEventListener('click', function(){
+    document.getElementById('dupwrap').classList.remove('show');
   });
 
   document.getElementById('again').addEventListener('click', function(){
