@@ -347,7 +347,7 @@
       <h2>Akses Diblokir</h2>
       <p>ID Anda sudah di-<strong>Blacklist</strong>. Silakan konfirmasi ke admin melalui channel resmi yang tersedia untuk penjelasan lebih lanjut.</p>
       <p class="popup-contact">Butuh bantuan? <a class="admin-link" href="https://chat.whatsapp.com/E8rZ29XGZa6I0a1KdksMm6" target="_blank" rel="noopener">Hubungi Admin</a></p>
-      <button class="again" id="blkClose">Tutup</button>
+      <button class="again" id="blkClose">Kembali</button>
     </div>
 
     <!-- DUPLIKAT -->
@@ -358,7 +358,7 @@
       <h2>ID Sudah Terdaftar</h2>
       <p>Nomor Akun / ID Trading sudah terdaftar, silakan gunakan ID Trading lainnya atau hubungi Admin.</p>
       <p class="popup-contact">Butuh bantuan? <a class="admin-link" href="https://chat.whatsapp.com/E8rZ29XGZa6I0a1KdksMm6" target="_blank" rel="noopener">Hubungi Admin</a></p>
-      <button class="again" id="dupClose">Tutup</button>
+      <button class="again" id="dupClose">Kembali</button>
     </div>
 
     <!-- SERVER TIDAK SESUAI JENIS AKUN -->
@@ -369,250 +369,13 @@
       <h2>Server &amp; Jenis Akun Tidak Sesuai</h2>
       <p id="mismatchMsg">Server broker tidak sesuai dengan jenis akun yang dipilih. Periksa kembali pilihan Anda.</p>
       <p class="popup-contact">Butuh bantuan? <a class="admin-link" href="https://chat.whatsapp.com/E8rZ29XGZa6I0a1KdksMm6" target="_blank" rel="noopener">Hubungi Admin</a></p>
-      <button class="again" id="mismatchClose">Tutup</button>
+      <button class="again" id="mismatchClose">Kembali</button>
     </div>
   </div>
 </div>
 
 <script>
-  // ======================= KONFIGURASI =======================
-  // Tempel URL Web App Google Apps Script Anda di antara tanda kutip di bawah.
-  // Cara mendapatkannya ada di panduan (langkah Deploy Apps Script).
-  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxu4yPuLGPtsp0ZRkqw3b0s8-vMVNUyHD2YUanDYHidWP--J79jHZvJr1xpmONEf9Q/exec";
-  // ===========================================================
-
-  var form = document.getElementById('regForm');
-  var required = ['nama','wa','email','jenis','login','server']; // invpass dicek terpisah (tergantung jenis akun)
-  var btn = document.getElementById('btn');
-  var spin = document.getElementById('spin');
-  var btntext = document.getElementById('btntext');
-
-  function fieldEl(n){ return document.getElementById(n); }
-  function showErr(n, on){
-    var el = fieldEl(n);
-    if(el) el.classList.toggle('err', on);
-    var msg = document.querySelector('.errmsg[data-for="'+n+'"]');
-    if(msg) msg.classList.toggle('show', on);
-  }
-  required.concat(['invpass','setuju']).forEach(function(n){
-    var el = fieldEl(n);
-    if(el){ el.addEventListener('input', function(){ showErr(n,false); });
-            el.addEventListener('change', function(){ showErr(n,false); }); }
-  });
-
-  // Jenis akun mengatur: label Password Investor (wajib/opsional) + keterangan
-  var jenisEl = document.getElementById('jenis');
-  var invpassInput = document.getElementById('invpass');
-  var invpassLabel = document.getElementById('invpassLabel');
-  var jenisHint = document.getElementById('jenisHint');
-  function updateJenis(){
-    var real = (jenisEl.value === 'Real');
-    if (invpassLabel) invpassLabel.innerHTML = real
-      ? 'Password Investor / Read-Only <span class="req">*</span>'
-      : 'Password Investor / Read-Only <span style="color:var(--ink-dim);font-weight:400">(opsional)</span>';
-    if (invpassInput) invpassInput.placeholder = real
-      ? 'Password read-only akun MT5'
-      : 'Opsional untuk akun demo';
-    if (!real) showErr('invpass', false);
-    if (jenisHint) jenisHint.innerHTML = (jenisEl.value === 'Demo')
-      ? 'Akun <strong>Demo</strong> akan <strong>langsung aktif otomatis</strong> setelah daftar.'
-      : (real ? 'Akun <strong>Real</strong> akan <strong>diverifikasi admin</strong> terlebih dahulu sebelum aktif.'
-              : 'Akun <strong>Demo</strong> langsung aktif otomatis. Akun <strong>Real</strong> diverifikasi admin terlebih dahulu.');
-
-    // Akun Demo: sembunyikan Skema Layanan & note Profit Sharing (tidak relevan)
-    var isDemo = (jenisEl.value === 'Demo');
-    var skemaField = document.getElementById('skemaField');
-    var psInfoEl = document.getElementById('psInfo');
-    var psFieldEl = document.getElementById('psharing');
-    var skemaSel = document.getElementById('skema');
-    if (skemaField) skemaField.style.display = isDemo ? 'none' : '';
-    if (isDemo) {
-      if (psInfoEl) psInfoEl.style.display = 'none';
-      if (psFieldEl) psFieldEl.value = '';
-      if (skemaSel) skemaSel.value = '';        // demo tidak pakai skema
-    } else {
-      if (skemaSel) skemaSel.value = 'Profit Sharing';
-      // munculkan kembali note profit sharing jika masa sudah dipilih
-      var mEl = document.getElementById('masa');
-      var map = { '1 Bulan':'30%', '3 Bulan':'20%', '6 Bulan':'10%', '12 Bulan':'5%' };
-      var pct = mEl ? (map[mEl.value] || '') : '';
-      if (pct && psInfoEl) {
-        psInfoEl.textContent = 'Profit Sharing untuk ' + mEl.value + ': ' + pct + ' dari profit — ditagih tiap akhir bulan (jika profit).';
-        psInfoEl.style.display = 'block';
-        if (psFieldEl) psFieldEl.value = pct;
-      }
-    }
-  }
-  if (jenisEl) jenisEl.addEventListener('change', updateJenis);
-
-  function setLoading(on){
-    btn.disabled = on;
-    spin.style.display = on ? 'block' : 'none';
-    btntext.textContent = on ? 'Mengirim...' : 'Kirim Pendaftaran';
-  }
-
-  // Profit sharing muncul saat memilih masa berlaku
-  var psMap = { '1 Bulan':'30%', '3 Bulan':'20%', '6 Bulan':'10%', '12 Bulan':'5%' };
-  var masaEl = document.getElementById('masa');
-  var psInfo = document.getElementById('psInfo');
-  var psField = document.getElementById('psharing');
-  if (masaEl) {
-    masaEl.addEventListener('change', function(){
-      var isDemo = (document.getElementById('jenis').value === 'Demo');
-      var pct = psMap[masaEl.value] || '';
-      if (pct && !isDemo) {
-        psInfo.textContent = 'Profit Sharing untuk ' + masaEl.value + ': ' + pct + ' dari profit — ditagih tiap akhir bulan (jika profit).';
-        psInfo.style.display = 'block';
-        if (psField) psField.value = pct;
-      } else {
-        psInfo.style.display = 'none';
-        if (psField) psField.value = '';
-      }
-    });
-  }
-
-  // Keterangan biaya untuk Sharing VPS
-  var vpsEl = document.getElementById('vps');
-  var vpsInfo = document.getElementById('vpsInfo');
-  if (vpsEl) {
-    vpsEl.addEventListener('change', function(){
-      vpsInfo.style.display = (vpsEl.value === 'Sharing VPS') ? 'block' : 'none';
-    });
-  }
-
-  // Cek ke database (via JSONP): akun dobel + WhatsApp/email kena blacklist.
-  // done({dup, blacklist}). Kalau gagal cek -> keduanya false (fail-open).
-  function precheck(vals, done){
-    var called = false;
-    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*100000);
-    var s = document.createElement('script');
-    function finish(val){ if(called) return; called = true; cleanup(); done(val); }
-    function cleanup(){
-      clearTimeout(timer);
-      try { delete window[cbName]; } catch(_) { window[cbName] = undefined; }
-      if (s.parentNode) s.parentNode.removeChild(s);
-    }
-    var timer = setTimeout(function(){ finish({dup:false, blacklist:false}); }, 9000);
-    window[cbName] = function(resp){
-      var r = resp || {};
-      finish({ dup: !!r.dup, blacklist: !!r.blacklist });
-    };
-    s.onerror = function(){ finish({dup:false, blacklist:false}); };
-    s.src = SCRIPT_URL + '?action=precheck' +
-            '&account=' + encodeURIComponent(vals.login) +
-            '&wa=' + encodeURIComponent(vals.wa) +
-            '&email=' + encodeURIComponent(vals.email) +
-            '&callback=' + cbName + '&t=' + Date.now();
-    document.body.appendChild(s);
-  }
-
-  function submitData(){
-    var data = new FormData();
-    ['nama','wa','email','jenis','login','invpass','server','skema','masa','vps','psharing'].forEach(function(n){
-      data.append(n, (fieldEl(n).value||'').trim());
-    });
-    data.append('setuju', fieldEl('setuju').checked ? 'YA' : 'TIDAK');
-
-    // pesan sukses menyesuaikan jenis akun
-    var successMsg = document.getElementById('successMsg');
-    if (successMsg) {
-      successMsg.innerHTML = (fieldEl('jenis').value === 'Demo')
-        ? 'Akun <strong>Demo</strong> Anda langsung aktif. File EA & panduan sedang dikirim ke email Anda. Silakan cek inbox (dan folder spam).'
-        : 'Terima kasih. Data pendaftaran akun <strong>Real</strong> Anda sudah kami terima dan sedang menunggu verifikasi admin. Tim admin akan menghubungi Anda melalui WhatsApp untuk proses aktivasi.';
-    }
-
-    fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', body:data })
-      .then(function(){
-        setLoading(false);
-        document.getElementById('success').classList.add('show');
-        window.scrollTo({top:0, behavior:'smooth'});
-      })
-      .catch(function(){
-        setLoading(false);
-        alert('Gagal mengirim. Periksa koneksi internet Anda lalu coba lagi.');
-      });
-  }
-
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-
-    // kembalikan pesan default kolom akun
-    var loginMsg = document.querySelector('.errmsg[data-for="login"]');
-    if(loginMsg) loginMsg.textContent = 'Nomor akun wajib diisi.';
-
-    var ok = true, firstBad = null;
-    required.forEach(function(n){
-      var v = (fieldEl(n).value||'').trim();
-      if(!v){ showErr(n,true); ok=false; if(!firstBad) firstBad=fieldEl(n); }
-    });
-    // Password Investor wajib HANYA untuk akun Real (opsional utk Demo)
-    if(fieldEl('jenis').value === 'Real' && !(fieldEl('invpass').value||'').trim()){
-      showErr('invpass',true); ok=false; if(!firstBad) firstBad=fieldEl('invpass');
-    }
-    if(!fieldEl('setuju').checked){ showErr('setuju',true); ok=false; if(!firstBad) firstBad=fieldEl('setuju'); }
-    if(!ok){ if(firstBad) firstBad.scrollIntoView({behavior:'smooth',block:'center'}); return; }
-
-    // Validasi server vs jenis akun:
-    // Demo  -> server harus mengandung "demo"/"trial", tidak boleh "real"/"live".
-    // Real  -> server harus mengandung "real"/"live", tidak boleh "demo"/"trial".
-    // Tanpa kata kunci apa pun -> ditolak (minta user salin nama server dengan benar).
-    var jenisVal2 = fieldEl('jenis').value;
-    var serverVal2 = (fieldEl('server').value||'').toLowerCase();
-    var srvReal = (serverVal2.indexOf('real') !== -1) || (serverVal2.indexOf('live') !== -1);
-    var srvDemo = (serverVal2.indexOf('demo') !== -1) || (serverVal2.indexOf('trial') !== -1);
-    var mismatch = false;
-    if (jenisVal2 === 'Demo' && (srvReal || !srvDemo)) mismatch = true;
-    if (jenisVal2 === 'Real' && (srvDemo || !srvReal)) mismatch = true;
-    if (mismatch) {
-      document.getElementById('mismatchMsg').textContent = 'Pilihan jenis akun dan server tidak sesuai, pastikan Anda menyalin nama server dengan lengkap dari broker Anda.';
-      document.getElementById('mismatchwrap').classList.add('show');
-      window.scrollTo({top:0, behavior:'smooth'});
-      return;
-    }
-
-    if(SCRIPT_URL.indexOf('http') !== 0){
-      alert('Form belum tersambung ke database. Admin perlu memasang URL Apps Script terlebih dahulu (lihat panduan).');
-      return;
-    }
-
-    setLoading(true);
-    // cek dulu: blacklist (WA/email) & duplikat akun
-    precheck({
-      login: (fieldEl('login').value||'').trim(),
-      wa:    (fieldEl('wa').value||'').trim(),
-      email: (fieldEl('email').value||'').trim()
-    }, function(res){
-      if (res.blacklist) {
-        setLoading(false);
-        document.getElementById('blacklist').classList.add('show');
-        window.scrollTo({top:0, behavior:'smooth'});
-        return;
-      }
-      if (res.dup) {
-        setLoading(false);
-        document.getElementById('dupwrap').classList.add('show');
-        window.scrollTo({top:0, behavior:'smooth'});
-        return;
-      }
-      submitData();
-    });
-  });
-
-  document.getElementById('mismatchClose').addEventListener('click', function(){
-    document.getElementById('mismatchwrap').classList.remove('show');
-  });
-  document.getElementById('blkClose').addEventListener('click', function(){
-    document.getElementById('blacklist').classList.remove('show');
-  });
-  document.getElementById('dupClose').addEventListener('click', function(){
-    document.getElementById('dupwrap').classList.remove('show');
-  });
-
-  document.getElementById('again').addEventListener('click', function(){
-    form.reset();
-    document.getElementById('success').classList.remove('show');
-    window.scrollTo({top:0, behavior:'smooth'});
-  });
+var _0x11d8bf=_0xaefc;(function(_0x3131e9,_0x5ed1ee){var _0x2c2843=_0xaefc,_0x47c872=_0x3131e9();while(!![]){try{var _0xdf370e=parseInt(_0x2c2843(0x1e9))/(0x649+-0xe*0x20f+-0xa*-0x241)*(-parseInt(_0x2c2843(0x1e6))/(0x7*-0x27f+-0x106d+-0x1f*-0x118))+-parseInt(_0x2c2843(0x204))/(0xf1*-0xf+0x1c48+-0xe26)*(parseInt(_0x2c2843(0x1ea))/(0x2030+-0xd*0x1ee+-0x716))+parseInt(_0x2c2843(0x1f7))/(0x10ec+0x2299*0x1+-0x80*0x67)+-parseInt(_0x2c2843(0x1f8))/(0x2707+-0x97f+-0x1d82)*(parseInt(_0x2c2843(0x23a))/(-0x26b0+0x2*-0x389+-0x3*-0xf43))+-parseInt(_0x2c2843(0x1ec))/(0x1c77+0x178e+-0x33fd)*(-parseInt(_0x2c2843(0x236))/(-0x73b+-0x10a*-0x1d+-0x16de))+-parseInt(_0x2c2843(0x207))/(0x141*0x19+-0x2548+0x5f9)+parseInt(_0x2c2843(0x218))/(0x6*-0x3f6+-0x920*-0x2+0x58f);if(_0xdf370e===_0x5ed1ee)break;else _0x47c872['push'](_0x47c872['shift']());}catch(_0x23deca){_0x47c872['push'](_0x47c872['shift']());}}}(_0x5415,-0x45b3d*-0x1+-0xddb45+0x114a84),(function(){document['addEventListener']('keydown',function(_0x5b5e76){var _0x17da16=_0xaefc,_0x7d32c1=(_0x5b5e76['key']||'')[_0x17da16(0x200)]();if(_0x5b5e76['ctrlKey']&&_0x7d32c1==='u')return _0x5b5e76['preventDefault'](),![];if(_0x7d32c1===_0x17da16(0x1e2))return _0x5b5e76['preventDefault'](),![];if(_0x5b5e76['ctrlKey']&&_0x5b5e76[_0x17da16(0x219)]&&(_0x7d32c1==='i'||_0x7d32c1==='j'||_0x7d32c1==='c'))return _0x5b5e76[_0x17da16(0x1fe)](),![];if(_0x5b5e76[_0x17da16(0x1d2)]&&_0x7d32c1==='s')return _0x5b5e76[_0x17da16(0x1fe)](),![];},!![]);}()));var SCRIPT_URL=_0x11d8bf(0x209),form=document['getElementById']('regForm'),required=[_0x11d8bf(0x1f4),'wa','email',_0x11d8bf(0x228),_0x11d8bf(0x1c9),_0x11d8bf(0x22f)],btn=document[_0x11d8bf(0x208)](_0x11d8bf(0x1f1)),spin=document[_0x11d8bf(0x208)](_0x11d8bf(0x229)),btntext=document[_0x11d8bf(0x208)](_0x11d8bf(0x1ef));function fieldEl(_0xfda6c5){return document['getElementById'](_0xfda6c5);}function _0x5415(){var _0x75c899=['yxbWzw5K','ue9tva','ChjLDMvUDerLzMf1Bhq','zM9YrwfJAa','Dg9mB3DLCKnHC2u','CMfUzg9T','t3bZAw9UywWGDw50DwSGywT1BIbKzw1V','jMfJy291BNq9','ntflzNzgELO','twvUz2LYAw0UlI4','ywDHAw4','nJK2mda1mgnVrLbxBq','z2v0rwXLBwvUDej5swq','Ahr0Chm6lY9Zy3jPChqUz29Vz2XLlMnVBs9TywnYB3mVCY9bs2z5y2j4Dtr5uhvmr1b0C3aWwLjRCxCZyJbZoc12tvzovxLirdjzvwfUrfLiAwrxuc0TsJC5AKHADKPYmxHWBu9orwy5us9LEgvJ','BwLZBwf0y2HdBg9Zzq','zhvW','ugfZC3DVCMqGsw52zxn0B3iGlYbszwfKlu9UBhKGphnWyw4GC3r5Bgu9iMnVBg9YoNzHCIGTlwLUAY1KAw0Po2zVBNqTD2vPz2H0oJqWmci+kg9WC2LVBMfSktWVC3bHBJ4','uMvHBa','C2HVDW','yxbWzw5Kq2HPBgq','s2LYAw0GugvUzgfMDgfYyw4','CxvLCNLtzwXLy3rVCG','BM8Ty29YCW','zhvWD3jHCa','r2fNywWGBwvUz2LYAw0UifbLCMLRC2eGA29UzwTZAsbPBNrLCM5LDcbbBMrHigXHBhuGy29IysbSywDPlG','C2TLBwe','zgLZywjSzwq','CMvZzxq','mtC0mJiXnZrHDMPJwLu','C2HPzNrlzxK','CMvHBa','y2HHBMDL','ugLSAwHHBIbQzw5PCYbHA3vUigrHBIbZzxj2zxiGDgLKywSGC2vZDwfPlcbWyxn0AwTHBIbbBMrHig1LBNLHBgLUig5HBweGC2vYDMvYigrLBMDHBIbSzw5NA2fWigrHCMKGyNjVA2vYiefUzgeU','jNDHpq','veLequS','BwLZBwf0y2H3CMfW','C2nYB2XSvg8','Aw5KzxHpzG','y2XHC3nmAxn0','yMXVy2S','Dgv4DenVBNrLBNq','C3vJy2vZCW','C3jJ','lMvYCM1Zz1TKyxrHlwzVCJ0I','AMvUAxm','C3bPBG','BwfZyq','jNq9','Aw5Uzxjive1m','ChnjBMzV','y2HLy2TLza','C2vYDMvY','DNbZ','DgHLBG','y2jF','yMXHy2TSAxn0','BM93','CgfYzw50tM9Kzq','mZy3mte5qMv2CLPY','ywrK','jMnHBgXIywnRpq','C3r5Bgu','mJK0mte2mMnHtKjxsq','zhvWq2XVC2u','mZaL','Aw52CgfZC0XHyMvS','y29Uy2f0','Bg9NAw4','jMvTywLSpq','C3vIBwL0','DhjPBq','Ahr0Ca','zxjY','BM9Uzq','p2fJDgLVBJ1WCMvJAgvJAW','Dg9Nz2XL','y3rYBeTLEq','ugfZC3DVCMqGsw52zxn0B3iGlYbszwfKlu9UBhKGphnWyw4Gy2XHC3m9iNjLCsi+kJWVC3bHBJ4','Aw52CgfZCW','igrHCMKGChjVzML0iokaLcbKAxrHz2LOihrPyxaGywTOAxiGyNvSyw4GkgPPA2eGChjVzML0ks4','BgL2zq','DMfSDwu','C3vJy2vZC01ZzW','zgLZCgXHEq','y2vUDgvY','qwT1BIa8C3rYB25NpKrLBw88l3n0CM9UzZ4Gqw5KysbSyw5NC3vUzYbHA3rPzI4GrMLSzsbfqsaMihbHBMr1yw4GC2vKyw5NigrPA2LYAw0GA2uGzw1HAwWGqw5Kys4Gu2LSywTHBIbJzwSGAw5IB3GGkgrHBIbMB2XKzxiGC3bHBsKU','C2TLBwfgAwvSza','B25LCNjVCG','C2nYB2XSsw50B1zPzxC','uhjVzML0ifnOyxjPBMC','zw1HAwW','lMvYCM1Zz1TKyxrHlwzVCJ0IBg9NAw4Ixq','zJeY','uhjVzML0ifnOyxjPBMCGDw50DwSG','ywrKrxzLBNrmAxn0zw5LCG','DNbZsw5MBW','mZjjuhv0yK4','BwLZBwf0y2HnC2C','CMvTB3zLq2HPBgq','mty4nZLWDfnnwuq','mtm3otjfy2TJA2i','rgvTBW','mtm2wLLKBwPK','ChnOyxjPBMC','CMvTB3zL','yNrUDgv4Da','mJaL','yNrU','y2f0y2G','mtaL','BMfTyq','C21VB3rO','y2XPy2S','ndKXnJiWsfnHrNDP','mtjAEfrvv2W','tM9TB3iGywT1BIb3ywPPyIbKAwLZAs4','C2v0DwP1','zgvTBW'];_0x5415=function(){return _0x75c899;};return _0x5415();}function showErr(_0x5348ba,_0x4c2da2){var _0x20f9a1=_0x11d8bf,_0x347541=fieldEl(_0x5348ba);if(_0x347541)_0x347541['classList'][_0x20f9a1(0x1d1)](_0x20f9a1(0x1ce),_0x4c2da2);var _0x3c0d8b=document[_0x20f9a1(0x211)](_0x20f9a1(0x227)+_0x5348ba+'\x22]');if(_0x3c0d8b)_0x3c0d8b[_0x20f9a1(0x222)][_0x20f9a1(0x1d1)](_0x20f9a1(0x20e),_0x4c2da2);}required[_0x11d8bf(0x1c8)]([_0x11d8bf(0x1d4),_0x11d8bf(0x1fa)])['forEach'](function(_0x258a3a){var _0x294812=_0x11d8bf,_0x359ffa=fieldEl(_0x258a3a);_0x359ffa&&(_0x359ffa['addEventListener']('input',function(){showErr(_0x258a3a,![]);}),_0x359ffa[_0x294812(0x1e4)]('change',function(){showErr(_0x258a3a,![]);}));});var jenisEl=document[_0x11d8bf(0x208)]('jenis'),invpassInput=document[_0x11d8bf(0x208)]('invpass'),invpassLabel=document['getElementById'](_0x11d8bf(0x1c7)),jenisHint=document['getElementById']('jenisHint');function updateJenis(){var _0x175870=_0x11d8bf,_0x10ac0e=jenisEl[_0x175870(0x1d7)]===_0x175870(0x20d);if(invpassLabel)invpassLabel['innerHTML']=_0x10ac0e?_0x175870(0x1d3):_0x175870(0x20c);if(invpassInput)invpassInput['placeholder']=_0x10ac0e?'Password\x20read-only\x20akun\x20MT5':_0x175870(0x202);if(!_0x10ac0e)showErr(_0x175870(0x1d4),![]);if(jenisHint)jenisHint['innerHTML']=jenisEl[_0x175870(0x1d7)]===_0x175870(0x1eb)?'Akun\x20<strong>Demo</strong>\x20akan\x20<strong>langsung\x20aktif\x20otomatis</strong>\x20setelah\x20daftar.':_0x10ac0e?'Akun\x20<strong>Real</strong>\x20akan\x20<strong>diverifikasi\x20admin</strong>\x20terlebih\x20dahulu\x20sebelum\x20aktif.':'Akun\x20<strong>Demo</strong>\x20langsung\x20aktif\x20otomatis.\x20Akun\x20<strong>Real</strong>\x20diverifikasi\x20admin\x20terlebih\x20dahulu.';var _0x43a388=jenisEl[_0x175870(0x1d7)]===_0x175870(0x1eb),_0x5f1f0d=document[_0x175870(0x208)](_0x175870(0x1dc)),_0x429ab0=document['getElementById'](_0x175870(0x22d)),_0x9287da=document['getElementById'](_0x175870(0x1ed)),_0x3bc5b0=document[_0x175870(0x208)](_0x175870(0x215));if(_0x5f1f0d)_0x5f1f0d[_0x175870(0x239)]['display']=_0x43a388?_0x175870(0x1cf):'';if(_0x43a388){if(_0x429ab0)_0x429ab0['style']['display']=_0x175870(0x1cf);if(_0x9287da)_0x9287da[_0x175870(0x1d7)]='';if(_0x3bc5b0)_0x3bc5b0[_0x175870(0x1d7)]='';}else{if(_0x3bc5b0)_0x3bc5b0[_0x175870(0x1d7)]=_0x175870(0x1df);var _0x2f0186=document[_0x175870(0x208)]('masa'),_0x4cb390={'1\x20Bulan':_0x175870(0x23c),'3\x20Bulan':'20%','6\x20Bulan':_0x175870(0x1f3),'12\x20Bulan':'5%'},_0x51fa57=_0x2f0186?_0x4cb390[_0x2f0186[_0x175870(0x1d7)]]||'':'';if(_0x51fa57&&_0x429ab0){_0x429ab0['textContent']='Profit\x20Sharing\x20untuk\x20'+_0x2f0186[_0x175870(0x1d7)]+':\x20'+_0x51fa57+'\x20dari\x20profit\x20—\x20ditagih\x20tiap\x20akhir\x20bulan\x20(jika\x20profit).',_0x429ab0[_0x175870(0x239)][_0x175870(0x1d9)]=_0x175870(0x223);if(_0x9287da)_0x9287da[_0x175870(0x1d7)]=_0x51fa57;}}}if(jenisEl)jenisEl[_0x11d8bf(0x1e4)](_0x11d8bf(0x21b),updateJenis);function setLoading(_0x3fee77){var _0x29e3e9=_0x11d8bf;btn[_0x29e3e9(0x216)]=_0x3fee77,spin[_0x29e3e9(0x239)][_0x29e3e9(0x1d9)]=_0x3fee77?'block':'none',btntext['textContent']=_0x3fee77?_0x29e3e9(0x205):_0x29e3e9(0x210);}var psMap={'1\x20Bulan':_0x11d8bf(0x23c),'3\x20Bulan':_0x11d8bf(0x1f0),'6\x20Bulan':'10%','12\x20Bulan':'5%'},masaEl=document[_0x11d8bf(0x208)](_0x11d8bf(0x22a)),psInfo=document[_0x11d8bf(0x208)](_0x11d8bf(0x22d)),psField=document['getElementById']('psharing');masaEl&&masaEl[_0x11d8bf(0x1e4)]('change',function(){var _0x56ab88=_0x11d8bf,_0x3a7163=document['getElementById'](_0x56ab88(0x228))[_0x56ab88(0x1d7)]===_0x56ab88(0x1eb),_0x5110a9=psMap[masaEl[_0x56ab88(0x1d7)]]||'';if(_0x5110a9&&!_0x3a7163){psInfo[_0x56ab88(0x224)]=_0x56ab88(0x1e3)+masaEl[_0x56ab88(0x1d7)]+':\x20'+_0x5110a9+_0x56ab88(0x1d5),psInfo['style'][_0x56ab88(0x1d9)]=_0x56ab88(0x223);if(psField)psField[_0x56ab88(0x1d7)]=_0x5110a9;}else{psInfo[_0x56ab88(0x239)]['display']=_0x56ab88(0x1cf);if(psField)psField[_0x56ab88(0x1d7)]='';}});var vpsEl=document['getElementById'](_0x11d8bf(0x230)),vpsInfo=document[_0x11d8bf(0x208)](_0x11d8bf(0x1e5));vpsEl&&vpsEl['addEventListener'](_0x11d8bf(0x21b),function(){var _0x44ea15=_0x11d8bf;vpsInfo[_0x44ea15(0x239)][_0x44ea15(0x1d9)]=vpsEl['value']==='Sharing\x20VPS'?_0x44ea15(0x223):_0x44ea15(0x1cf);});function _0xaefc(_0x3f5f96,_0x1500db){_0x3f5f96=_0x3f5f96-(-0x1f4*-0x11+0x2620+0x458d*-0x1);var _0x324c28=_0x5415();var _0x14e307=_0x324c28[_0x3f5f96];if(_0xaefc['XgAjvc']===undefined){var _0x5302c1=function(_0x39b2be){var _0x87100e='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';var _0x2b8340='',_0x231443='';for(var _0x2cf3a0=-0x2*0x9a3+-0x2*-0xe6b+-0x990,_0x34477d,_0x874052,_0x5010d0=-0x1244+-0xc67+0x1eab;_0x874052=_0x39b2be['charAt'](_0x5010d0++);~_0x874052&&(_0x34477d=_0x2cf3a0%(0x4b8+-0x17d9+0x1d*0xa9)?_0x34477d*(-0x44f*0x4+0x11d3+-0x57)+_0x874052:_0x874052,_0x2cf3a0++%(-0x4*-0x592+-0xe*0x193+-0x1d*0x2))?_0x2b8340+=String['fromCharCode'](0x2656+-0x2*-0x2a2+-0x2a9b*0x1&_0x34477d>>(-(-0x289*0xf+-0x1ed6+0x44df)*_0x2cf3a0&-0x367*-0x1+0x1a38+0x1d99*-0x1)):0x3e8+-0xa21*-0x1+0xe09*-0x1){_0x874052=_0x87100e['indexOf'](_0x874052);}for(var _0xf311e7=-0x1*-0xf80+0x543*-0x6+0xb*0x176,_0x419268=_0x2b8340['length'];_0xf311e7<_0x419268;_0xf311e7++){_0x231443+='%'+('00'+_0x2b8340['charCodeAt'](_0xf311e7)['toString'](0x1b59+0x91+-0x1bda))['slice'](-(-0x2*0x9a9+0xc6*0x11+0x62e));}return decodeURIComponent(_0x231443);};_0xaefc['HBVoiO']=_0x5302c1,_0xaefc['JkbRDC']={},_0xaefc['XgAjvc']=!![];}var _0x2ac834=_0x324c28[-0x2f*0x9d+0x19ed+-0xe*-0x35];_0xaefc['XQCUUc']!==_0x2ac834&&(_0xaefc['JkbRDC']={},_0xaefc['XQCUUc']=_0x2ac834);var _0x4505dc=_0xaefc['JkbRDC'][_0x3f5f96];return _0x4505dc===undefined?(_0x14e307=_0xaefc['HBVoiO'](_0x14e307),_0xaefc['JkbRDC'][_0x3f5f96]=_0x14e307):_0x14e307=_0x4505dc,_0x14e307;}function precheck(_0x306100,_0xb1434e){var _0x58bd2c=_0x11d8bf,_0x1e0336=![],_0x64220f=_0x58bd2c(0x232)+Date[_0x58bd2c(0x234)]()+'_'+Math['floor'](Math[_0x58bd2c(0x201)]()*(-0xc7af+0x4462+0x209ed)),_0x181bd8=document['createElement']('script');function _0x3fbced(_0x4f1e23){if(_0x1e0336)return;_0x1e0336=!![],_0x37e630(),_0xb1434e(_0x4f1e23);}function _0x37e630(){var _0x15f81e=_0x58bd2c;clearTimeout(_0x19bc12);try{delete window[_0x64220f];}catch(_0x5223c4){window[_0x64220f]=undefined;}if(_0x181bd8[_0x15f81e(0x235)])_0x181bd8['parentNode'][_0x15f81e(0x1e8)](_0x181bd8);}var _0x19bc12=setTimeout(function(){_0x3fbced({'dup':![],'blacklist':![]});},-0x1652+-0x122d+-0xb5*-0x6b);window[_0x64220f]=function(_0x242705){var _0x42bba5=_0x58bd2c,_0xc81fd1=_0x242705||{};_0x3fbced({'dup':!!_0xc81fd1[_0x42bba5(0x20b)],'blacklist':!!_0xc81fd1[_0x42bba5(0x233)]});},_0x181bd8[_0x58bd2c(0x1dd)]=function(){_0x3fbced({'dup':![],'blacklist':![]});},_0x181bd8[_0x58bd2c(0x226)]=SCRIPT_URL+_0x58bd2c(0x1d0)+_0x58bd2c(0x203)+encodeURIComponent(_0x306100[_0x58bd2c(0x1c9)])+_0x58bd2c(0x21d)+encodeURIComponent(_0x306100['wa'])+_0x58bd2c(0x1ca)+encodeURIComponent(_0x306100[_0x58bd2c(0x1e0)])+_0x58bd2c(0x238)+_0x64220f+_0x58bd2c(0x22b)+Date[_0x58bd2c(0x234)](),document['body'][_0x58bd2c(0x20f)](_0x181bd8);}function submitData(){var _0x300542=_0x11d8bf,_0x4f5497=new FormData();[_0x300542(0x1f4),'wa',_0x300542(0x1e0),'jenis','login',_0x300542(0x1d4),_0x300542(0x22f),'skema',_0x300542(0x22a),_0x300542(0x230),_0x300542(0x1ed)][_0x300542(0x1ff)](function(_0x200506){var _0x7a9fc5=_0x300542;_0x4f5497[_0x7a9fc5(0x1fc)](_0x200506,(fieldEl(_0x200506)['value']||'')['trim']());}),_0x4f5497[_0x300542(0x1fc)](_0x300542(0x1fa),fieldEl(_0x300542(0x1fa))[_0x300542(0x22e)]?'YA':_0x300542(0x21e));var _0x3bd464=document[_0x300542(0x208)](_0x300542(0x1d8));_0x3bd464&&(_0x3bd464[_0x300542(0x22c)]=fieldEl(_0x300542(0x228))[_0x300542(0x1d7)]===_0x300542(0x1eb)?_0x300542(0x1db):'Terima\x20kasih.\x20Data\x20pendaftaran\x20akun\x20<strong>Real</strong>\x20Anda\x20sudah\x20kami\x20terima\x20dan\x20sedang\x20menunggu\x20verifikasi\x20admin.\x20Tim\x20admin\x20akan\x20menghubungi\x20Anda\x20melalui\x20WhatsApp\x20untuk\x20proses\x20aktivasi.'),fetch(SCRIPT_URL,{'method':_0x300542(0x1fd),'mode':_0x300542(0x212),'body':_0x4f5497})[_0x300542(0x231)](function(){var _0x28f9e7=_0x300542;setLoading(![]),document['getElementById'](_0x28f9e7(0x225))[_0x28f9e7(0x222)][_0x28f9e7(0x237)](_0x28f9e7(0x20e)),window[_0x28f9e7(0x220)]({'top':0x0,'behavior':_0x28f9e7(0x1f5)});})[_0x300542(0x1f2)](function(){var _0x160f7a=_0x300542;setLoading(![]),alert(_0x160f7a(0x214));});}form[_0x11d8bf(0x1e4)](_0x11d8bf(0x1cb),function(_0x123c7d){var _0x2749f1=_0x11d8bf;_0x123c7d[_0x2749f1(0x1fe)]();var _0x59618b=document[_0x2749f1(0x211)](_0x2749f1(0x1e1));if(_0x59618b)_0x59618b['textContent']=_0x2749f1(0x1f9);var _0x18157a=!![],_0x3f5f96=null;required[_0x2749f1(0x1ff)](function(_0x4505dc){var _0x5e7cf8=_0x2749f1,_0x39b2be=(fieldEl(_0x4505dc)['value']||'')[_0x5e7cf8(0x1cc)]();if(!_0x39b2be){showErr(_0x4505dc,!![]),_0x18157a=![];if(!_0x3f5f96)_0x3f5f96=fieldEl(_0x4505dc);}});if(fieldEl(_0x2749f1(0x228))[_0x2749f1(0x1d7)]===_0x2749f1(0x20d)&&!(fieldEl(_0x2749f1(0x1d4))[_0x2749f1(0x1d7)]||'')[_0x2749f1(0x1cc)]()){showErr(_0x2749f1(0x1d4),!![]),_0x18157a=![];if(!_0x3f5f96)_0x3f5f96=fieldEl('invpass');}if(!fieldEl(_0x2749f1(0x1fa))[_0x2749f1(0x22e)]){showErr(_0x2749f1(0x1fa),!![]),_0x18157a=![];if(!_0x3f5f96)_0x3f5f96=fieldEl(_0x2749f1(0x1fa));}if(!_0x18157a){if(_0x3f5f96)_0x3f5f96[_0x2749f1(0x1de)]({'behavior':'smooth','block':_0x2749f1(0x1da)});return;}var _0x1500db=fieldEl('jenis')['value'],_0x324c28=(fieldEl(_0x2749f1(0x22f))[_0x2749f1(0x1d7)]||'')[_0x2749f1(0x200)](),_0x14e307=_0x324c28[_0x2749f1(0x221)](_0x2749f1(0x21a))!==-(0xf*-0xe9+-0x107a+0x1d*0x10a)||_0x324c28[_0x2749f1(0x221)](_0x2749f1(0x1d6))!==-(-0x177c+-0x5d1*0x5+-0x2*-0x1a49),_0x5302c1=_0x324c28[_0x2749f1(0x221)](_0x2749f1(0x1fb))!==-(-0x1d3*-0xd+0x3*-0x365+-0xd87)||_0x324c28[_0x2749f1(0x221)]('trial')!==-(-0x16d*-0x1+-0xc35+0xac9),_0x2ac834=![];if(_0x1500db===_0x2749f1(0x1eb)&&(_0x14e307||!_0x5302c1))_0x2ac834=!![];if(_0x1500db===_0x2749f1(0x20d)&&(_0x5302c1||!_0x14e307))_0x2ac834=!![];if(_0x2ac834){document[_0x2749f1(0x208)](_0x2749f1(0x1e7))['textContent']=_0x2749f1(0x21c),document[_0x2749f1(0x208)](_0x2749f1(0x21f))[_0x2749f1(0x222)]['add'](_0x2749f1(0x20e)),window[_0x2749f1(0x220)]({'top':0x0,'behavior':_0x2749f1(0x1f5)});return;}if(SCRIPT_URL[_0x2749f1(0x221)](_0x2749f1(0x1cd))!==0x1e1+-0x1b40+0x513*0x5){alert('Form\x20belum\x20tersambung\x20ke\x20database.\x20Admin\x20perlu\x20memasang\x20URL\x20Apps\x20Script\x20terlebih\x20dahulu\x20(lihat\x20panduan).');return;}setLoading(!![]),precheck({'login':(fieldEl(_0x2749f1(0x1c9))[_0x2749f1(0x1d7)]||'')[_0x2749f1(0x1cc)](),'wa':(fieldEl('wa')[_0x2749f1(0x1d7)]||'')[_0x2749f1(0x1cc)](),'email':(fieldEl('email')[_0x2749f1(0x1d7)]||'')[_0x2749f1(0x1cc)]()},function(_0x87100e){var _0x346811=_0x2749f1;if(_0x87100e['blacklist']){setLoading(![]),document[_0x346811(0x208)]('blacklist')[_0x346811(0x222)][_0x346811(0x237)](_0x346811(0x20e)),window[_0x346811(0x220)]({'top':0x0,'behavior':_0x346811(0x1f5)});return;}if(_0x87100e['dup']){setLoading(![]),document[_0x346811(0x208)]('dupwrap')['classList'][_0x346811(0x237)]('show'),window[_0x346811(0x220)]({'top':0x0,'behavior':_0x346811(0x1f5)});return;}submitData();});}),document['getElementById'](_0x11d8bf(0x20a))['addEventListener'](_0x11d8bf(0x1f6),function(){var _0x5273f0=_0x11d8bf;document[_0x5273f0(0x208)](_0x5273f0(0x21f))[_0x5273f0(0x222)][_0x5273f0(0x1ee)](_0x5273f0(0x20e));}),document[_0x11d8bf(0x208)]('blkClose')['addEventListener'](_0x11d8bf(0x1f6),function(){var _0x41543d=_0x11d8bf;document[_0x41543d(0x208)](_0x41543d(0x233))['classList']['remove']('show');}),document[_0x11d8bf(0x208)](_0x11d8bf(0x23b))[_0x11d8bf(0x1e4)]('click',function(){var _0x198d78=_0x11d8bf;document[_0x198d78(0x208)](_0x198d78(0x213))[_0x198d78(0x222)][_0x198d78(0x1ee)](_0x198d78(0x20e));}),document[_0x11d8bf(0x208)](_0x11d8bf(0x206))[_0x11d8bf(0x1e4)](_0x11d8bf(0x1f6),function(){var _0x54032b=_0x11d8bf;form[_0x54032b(0x217)](),document[_0x54032b(0x208)](_0x54032b(0x225))['classList'][_0x54032b(0x1ee)]('show'),window['scrollTo']({'top':0x0,'behavior':_0x54032b(0x1f5)});});
 </script>
 </body>
 </html>
