@@ -229,14 +229,24 @@
         <div class="section">
           <div class="sec-head"><span class="sec-num">2</span><span class="sec-title">Data Akun Trading (untuk Aktivasi)</span></div>
           <div class="grid">
+            <div class="field full">
+              <label for="jenis">Jenis Akun <span class="req">*</span></label>
+              <select id="jenis" name="jenis" required>
+                <option value="" disabled selected>-- Pilih jenis akun --</option>
+                <option value="Demo">Demo</option>
+                <option value="Real">Real</option>
+              </select>
+              <div class="hint" id="jenisHint">Akun <strong>Demo</strong> langsung aktif otomatis. Akun <strong>Real</strong> diverifikasi admin terlebih dahulu.</div>
+              <div class="errmsg" data-for="jenis">Silakan pilih jenis akun (Demo atau Real).</div>
+            </div>
             <div class="field">
               <label for="login">Nomor Akun / Login MT5 <span class="req">*</span></label>
               <input id="login" name="login" type="text" inputmode="numeric" placeholder="Contoh: 12345678" required>
               <div class="errmsg" data-for="login">Nomor akun wajib diisi.</div>
             </div>
             <div class="field">
-              <label for="invpass">Password Investor / Read-Only <span class="req">*</span></label>
-              <input id="invpass" name="invpass" type="text" placeholder="Password read-only akun MT5" required>
+              <label for="invpass"><span id="invpassLabel">Password Investor / Read-Only <span class="req">*</span></span></label>
+              <input id="invpass" name="invpass" type="text" placeholder="Password read-only akun MT5">
               <div class="errmsg" data-for="invpass">Password Investor / Read-Only wajib diisi.</div>
             </div>
             <div class="field full">
@@ -325,7 +335,7 @@
         <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#7ee0a6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
       </div>
       <h2>Pendaftaran Terkirim!</h2>
-      <p>Terima kasih. Data pendaftaran Anda sudah kami terima. Tim admin akan menghubungi Anda melalui WhatsApp untuk proses verifikasi dan aktivasi lisensi EA Apocalypto.</p>
+      <p id="successMsg">Terima kasih. Data pendaftaran Anda sudah kami terima. Tim admin akan menghubungi Anda melalui WhatsApp untuk proses verifikasi dan aktivasi lisensi EA Apocalypto.</p>
       <button class="again" id="again">Daftar Akun Lain</button>
     </div>
 
@@ -361,7 +371,7 @@
   // ===========================================================
 
   var form = document.getElementById('regForm');
-  var required = ['nama','wa','email','login','invpass','server'];
+  var required = ['nama','wa','email','jenis','login','server']; // invpass dicek terpisah (tergantung jenis akun)
   var btn = document.getElementById('btn');
   var spin = document.getElementById('spin');
   var btntext = document.getElementById('btntext');
@@ -373,11 +383,32 @@
     var msg = document.querySelector('.errmsg[data-for="'+n+'"]');
     if(msg) msg.classList.toggle('show', on);
   }
-  required.concat(['setuju']).forEach(function(n){
+  required.concat(['invpass','setuju']).forEach(function(n){
     var el = fieldEl(n);
     if(el){ el.addEventListener('input', function(){ showErr(n,false); });
             el.addEventListener('change', function(){ showErr(n,false); }); }
   });
+
+  // Jenis akun mengatur: label Password Investor (wajib/opsional) + keterangan
+  var jenisEl = document.getElementById('jenis');
+  var invpassInput = document.getElementById('invpass');
+  var invpassLabel = document.getElementById('invpassLabel');
+  var jenisHint = document.getElementById('jenisHint');
+  function updateJenis(){
+    var real = (jenisEl.value === 'Real');
+    if (invpassLabel) invpassLabel.innerHTML = real
+      ? 'Password Investor / Read-Only <span class="req">*</span>'
+      : 'Password Investor / Read-Only <span style="color:var(--ink-dim);font-weight:400">(opsional)</span>';
+    if (invpassInput) invpassInput.placeholder = real
+      ? 'Password read-only akun MT5'
+      : 'Opsional untuk akun demo';
+    if (!real) showErr('invpass', false);
+    if (jenisHint) jenisHint.innerHTML = (jenisEl.value === 'Demo')
+      ? 'Akun <strong>Demo</strong> akan <strong>langsung aktif otomatis</strong> setelah daftar.'
+      : (real ? 'Akun <strong>Real</strong> akan <strong>diverifikasi admin</strong> terlebih dahulu sebelum aktif.'
+              : 'Akun <strong>Demo</strong> langsung aktif otomatis. Akun <strong>Real</strong> diverifikasi admin terlebih dahulu.');
+  }
+  if (jenisEl) jenisEl.addEventListener('change', updateJenis);
 
   function setLoading(on){
     btn.disabled = on;
@@ -441,10 +472,18 @@
 
   function submitData(){
     var data = new FormData();
-    ['nama','wa','email','login','invpass','server','skema','masa','vps','psharing'].forEach(function(n){
+    ['nama','wa','email','jenis','login','invpass','server','skema','masa','vps','psharing'].forEach(function(n){
       data.append(n, (fieldEl(n).value||'').trim());
     });
     data.append('setuju', fieldEl('setuju').checked ? 'YA' : 'TIDAK');
+
+    // pesan sukses menyesuaikan jenis akun
+    var successMsg = document.getElementById('successMsg');
+    if (successMsg) {
+      successMsg.innerHTML = (fieldEl('jenis').value === 'Demo')
+        ? 'Akun <strong>Demo</strong> Anda langsung aktif. File EA & panduan sedang dikirim ke email Anda. Silakan cek inbox (dan folder spam).'
+        : 'Terima kasih. Data pendaftaran akun <strong>Real</strong> Anda sudah kami terima dan sedang menunggu verifikasi admin. Tim admin akan menghubungi Anda melalui WhatsApp untuk proses aktivasi.';
+    }
 
     fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', body:data })
       .then(function(){
@@ -470,6 +509,10 @@
       var v = (fieldEl(n).value||'').trim();
       if(!v){ showErr(n,true); ok=false; if(!firstBad) firstBad=fieldEl(n); }
     });
+    // Password Investor wajib HANYA untuk akun Real (opsional utk Demo)
+    if(fieldEl('jenis').value === 'Real' && !(fieldEl('invpass').value||'').trim()){
+      showErr('invpass',true); ok=false; if(!firstBad) firstBad=fieldEl('invpass');
+    }
     if(!fieldEl('setuju').checked){ showErr('setuju',true); ok=false; if(!firstBad) firstBad=fieldEl('setuju'); }
     if(!ok){ if(firstBad) firstBad.scrollIntoView({behavior:'smooth',block:'center'}); return; }
 
