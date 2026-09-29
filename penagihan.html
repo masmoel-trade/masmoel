@@ -84,10 +84,13 @@
       <div class="row"><span class="k">Email</span><span class="v" id="vEmail">-</span></div>
       <div class="row"><span class="k">WhatsApp</span><span class="v" id="vWa">-</span></div>
       <div class="row"><span class="k">Status Lisensi</span><span class="v" id="vStatus">-</span></div>
+      <div class="row"><span class="k">Jenis Akun</span><span class="v" id="vJenis">-</span></div>
       <div class="row"><span class="k">Periode</span><span class="v" id="vPeriode">-</span></div>
-      <div class="row"><span class="k">Total Profit</span><span class="v" id="vProfit">-</span></div>
+      <div class="row"><span class="k">Total Profit (USD)</span><span class="v" id="vProfit">-</span></div>
       <div class="row"><span class="k">Profit Sharing</span><span class="v" id="vPersen">-</span></div>
-      <div class="total"><span class="k">TAGIHAN</span><span class="v" id="vTagihan">-</span></div>
+      <div class="row"><span class="k">Kurs (Rp/USD)</span><span class="v" id="vKurs">-</span></div>
+      <div class="total"><span class="k">TAGIHAN <span style="font-weight:400;font-size:11px;color:#7a869a;">(estimasi)</span></span><span class="v" id="vTagihan">-</span></div>
+      <div class="hint" style="text-align:right;margin-top:4px;">Kurs &amp; tagihan final dihitung ulang saat invoice dikirim.</div>
 
       <div class="bank">
         <b>Cara Pembayaran</b><br>
@@ -200,7 +203,8 @@
     'UNAUTHORIZED':'Sesi berakhir. Silakan login ulang.',
     'NO_EMAIL':'Member ini belum punya email di database.',
     'NO_PERIODE':'Kolom "Periode Penagihan" member masih kosong. Isi dulu di spreadsheet.',
-    'NO_PROFIT':'Kolom "Total Profit" member masih kosong / 0. Isi dulu di spreadsheet.'
+    'NO_PROFIT':'Kolom "Total Profit" member masih kosong / 0. Isi dulu di spreadsheet.',
+    'NO_KURS':'Gagal mengambil kurs USD saat ini. Coba lagi sebentar, atau set kurs cadangan di Google Script.'
   };
 
   // ---------- Sesi / token ----------
@@ -266,14 +270,20 @@
       el('vEmail').textContent=res.email||'-';
       el('vWa').textContent=res.wa||'-';
       el('vStatus').textContent=res.status||'-';
+      el('vJenis').textContent=res.jenis||('Real '+(res.satuan||'USD'));
       el('vPeriode').textContent=res.periode||'(kosong)';
-      el('vProfit').textContent=res.totalProfitStr||'Rp 0';
+      el('vProfit').textContent=res.profitUSDStr||'$ 0,00';
       el('vPersen').textContent=(res.persen||0)+'%';
+      el('vKurs').textContent=res.kursStr||'-';
       el('vTagihan').textContent=res.tagihanStr||'Rp 0';
       if(res.bank){ el('vBank').textContent=res.bank.nama; el('vRek').textContent=res.bank.rek; el('vAn').textContent=res.bank.an; }
-      if(!res.periode || !res.totalProfit){
+      var kurang=[];
+      if(!res.periode) kurang.push('Periode Penagihan');
+      if(!res.profitInput) kurang.push('Total Profit');
+      if(!res.kurs) kurang.push('Kurs (gagal ambil, coba lagi)');
+      if(kurang.length){
         el('msg').className='msg err show';
-        el('msg').innerHTML='⚠️ Periode / Total Profit belum diisi di spreadsheet. Lengkapi dulu sebelum kirim invoice.';
+        el('msg').innerHTML='⚠️ Belum bisa kirim invoice — lengkapi dulu: <b>'+kurang.join(', ')+'</b>.';
         el('btnKirim').disabled=true;
       } else {
         el('btnKirim').disabled=false; el('msg').className='msg';
@@ -295,7 +305,8 @@
       if(!res){ el('btnKirim').disabled=false; el('msg').className='msg err show'; el('msg').textContent='Gagal terhubung. Coba lagi.'; return; }
       if(res.result==='ok'){
         el('msg').className='msg ok show';
-        el('msg').innerHTML='✅ Invoice <b>'+res.invId+'</b> ('+res.tagihanStr+') terkirim ke '+res.email+'.<br>Anda juga menerima email dengan tombol "Tandai Lunas".';
+        var kodeInfo = (res.kodeUnik) ? ' <br>🔑 Kode unik: <b>'+res.kodeUnik+'</b> (3 digit terakhir tagihan — cek di mutasi).' : '';
+        el('msg').innerHTML='✅ Invoice <b>'+res.invId+'</b> ('+res.tagihanStr+', kurs '+(res.kursStr||'-')+') terkirim ke '+res.email+'.'+kodeInfo+'<br>Anda juga menerima email dengan tombol "Tandai Lunas".';
       } else {
         el('btnKirim').disabled=false;
         if(res.error==='UNAUTHORIZED'){ clearToken(); showLogin('Sesi berakhir. Login ulang ya.'); return; }
